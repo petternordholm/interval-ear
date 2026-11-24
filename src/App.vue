@@ -9,8 +9,9 @@ import {
 import { Toolbar, ToolbarButton, ToolbarSeparator } from "@ui-sdk/vue/toolbar";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { audioContext, canPlay, scheduleNote, stopNotes } from "./audio";
-import Piano from "./components/Piano.vue";
+import Neck from "./components/Neck.vue";
 import SettingsDialog from "./components/SettingsDialog.vue";
+import { createBassQuestion, placeLabel, type FretPosition } from "./bass";
 import {
   emptyStats,
   loadSettings,
@@ -21,7 +22,6 @@ import {
   type Stats,
 } from "./storage";
 import {
-  createQuestion,
   noteLabel,
   noteName,
   noteSpoken,
@@ -37,6 +37,8 @@ const settings = ref<Settings>(loadSettings());
 const stats = ref<Stats>(loadStats());
 const question = ref<Question | null>(null);
 const choice = ref<number | null>(null);
+const answerAt = ref<FretPosition | null>(null);
+const touched = ref<FretPosition | null>(null);
 const phase = ref<"ready" | "guess" | "revealed">("ready");
 const sounding = ref<"root" | "other" | null>(null);
 const status = ref("");
@@ -56,7 +58,7 @@ const direction = computed({
 const drill = computed(() => presetTitle(presetFor(settings.value.intervals)));
 
 const prompt = computed(() => {
-  if (!question.value) return "a fifth above · example";
+  if (!question.value) return "G string, fret 4 · example";
   const label = noteLabel(question.value.root);
   if (settings.value.direction === "either") return `Above or below ${label}`;
   return question.value.direction === "up"
@@ -65,14 +67,14 @@ const prompt = computed(() => {
 });
 
 const rootPitch = computed(() =>
-  question.value ? noteName(question.value.root) : "C",
+  question.value ? noteName(question.value.root) : "E",
 );
 const rootMeta = computed(() =>
-  question.value ? noteLabel(question.value.root) : "C4 · example",
+  question.value ? noteLabel(question.value.root) : "E2 · example",
 );
 const otherPitch = computed(() => {
   if (!question.value || phase.value !== "revealed")
-    return question.value ? "?" : "G";
+    return question.value ? "?" : "B";
   return noteName(question.value.target);
 });
 const otherMeta = computed(() => {
@@ -93,12 +95,12 @@ const scoreLine = computed(() => {
   return `${stats.value.streak} streak · ${stats.value.correct}/${stats.value.heard} · ${percent}%`;
 });
 
-const pianoLabel = computed(() => {
+const neckLabel = computed(() => {
   if (!question.value)
-    return "Answer keyboard. Play the first note before choosing a key.";
+    return "Bass neck. Play the first note, then choose a string and fret.";
   if (phase.value === "revealed")
-    return "Answer keyboard. The correct key is marked. Click a key to hear it.";
-  return "Answer keyboard. Choose the note you heard.";
+    return "Bass neck. The right frets are marked. Click a fret to hear it.";
+  return "Bass neck. Choose the note you heard.";
 });
 
 function clearTimers() {
@@ -180,8 +182,13 @@ function hearKey(midi: number) {
   status.value = `Playing ${noteSpoken(midi)}`;
 }
 
+function clearPointing() {
+  answerAt.value = null;
+  touched.value = null;
+}
+
 function begin() {
-  const next = createQuestion(
+  const next = createBassQuestion(
     settings.value.intervals,
     settings.value.direction,
   );
@@ -189,6 +196,7 @@ function begin() {
     status.value = "Turn on at least one interval in settings.";
     return;
   }
+  clearPointing();
   question.value = next;
   choice.value = null;
   phase.value = "guess";
@@ -196,7 +204,7 @@ function begin() {
 }
 
 function nextRound() {
-  const next = createQuestion(
+  const next = createBassQuestion(
     settings.value.intervals,
     settings.value.direction,
     Math.random,
@@ -206,6 +214,7 @@ function nextRound() {
     status.value = "Turn on at least one interval in settings.";
     return;
   }
+  clearPointing();
   question.value = next;
   choice.value = null;
   phase.value = "guess";
@@ -233,6 +242,21 @@ function onPick(midi: number) {
       : stats.value.best,
   };
   timers.push(window.setTimeout(() => play("both"), 280));
+}
+
+function onPickPosition(spot: FretPosition) {
+  touched.value = spot;
+  if (!question.value || phase.value === "ready") {
+    hearKey(spot.midi);
+    status.value = `Playing ${noteSpoken(spot.midi)}, ${placeLabel(spot)}`;
+    return;
+  }
+  const heardOnly = phase.value === "revealed";
+  if (phase.value === "guess") answerAt.value = spot;
+  onPick(spot.midi);
+  if (heardOnly) {
+    status.value = `Playing ${noteSpoken(spot.midi)}, ${placeLabel(spot)}`;
+  }
 }
 
 function resetScore() {
@@ -266,7 +290,9 @@ onUnmounted(() => {
       <div>
         <p class="eyebrow">Ear training</p>
         <h1>Interval ear</h1>
-        <p class="lede">The root is named. You name the other note.</p>
+        <p class="lede">
+          The root is named. You find the other note on the bass.
+        </p>
       </div>
       <p class="scoreline">
         {{ scoreLine }}<span v-if="stats.best"> · best {{ stats.best }}</span>
@@ -286,8 +312,9 @@ onUnmounted(() => {
 
     <section class="card">
       <p v-if="!question" class="intro">
-        You see the root, for example C. A second note then plays on its own.
-        Find it on the keyboard. A fifth above C is G.
+        You see the root, for example E2. A second note plays. Find it on the
+        bass, by string and fret. A fifth above E2 is B2, on the G string at
+        fret 4.
       </p>
 
       <div class="score">
@@ -331,19 +358,22 @@ onUnmounted(() => {
         >
       </div>
 
-      <div class="keyboard-scroll">
-        <Piano
-          :root="question?.root ?? null"
-          :target="phase === 'revealed' ? (question?.target ?? null) : null"
-          :choice="choice"
-          :sounding="sounding"
-          :label="pianoLabel"
-          @pick="onPick"
-        />
-      </div>
+      <Neck
+        :root="question?.root ?? null"
+        :target="phase === 'revealed' ? (question?.target ?? null) : null"
+        :choice="choice"
+        :answer-at="answerAt"
+        :touched="touched"
+        :sounding="sounding"
+        :label="neckLabel"
+        @pick="onPickPosition"
+      />
       <p class="hint">
-        The orange bar is the root. Space replays both notes.
-        <span class="swipe">Swipe the keyboard if it runs off the screen.</span>
+        G is the top string. 0 is open. Orange is the root. The same tone sits
+        on more than one string. Space replays both notes.
+        <span class="swipe"
+          >Scroll sideways if the neck runs off the screen.</span
+        >
       </p>
 
       <div v-if="verdict" class="verdict" :data-correct="verdict.correct">
