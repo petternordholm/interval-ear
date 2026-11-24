@@ -15,7 +15,6 @@ import {
   spotAt,
   spotLive,
   type FretPosition,
-  type StringId,
 } from "../bass";
 
 const props = defineProps<{
@@ -45,9 +44,25 @@ const board = computed(() => ({
   answerAt: props.answerAt,
 }));
 
-function role(stringId: StringId, fret: number) {
-  return positionRole(spotAt(stringId, fret), board.value);
-}
+const strings = computed(() =>
+  DIAGRAM_STRINGS.map((string) => ({
+    ...string,
+    frets: FRET_NUMBERS.map((fret) => {
+      const spot = spotAt(string.id, fret);
+      const mark = positionRole(spot, board.value);
+      return {
+        fret,
+        spot,
+        mark,
+        live: spotLive(spot, props.sounding, props.root, props.target),
+        touched: sameSpot(props.touched, spot),
+        label: spotAria(spot, mark),
+        name: noteName(spot.midi),
+        octave: octaveOf(spot.midi),
+      };
+    }),
+  })),
+);
 
 const caption = computed(() => {
   if (props.answerAt) return fretPhrase(props.answerAt);
@@ -72,11 +87,7 @@ const caption = computed(() => {
       </Toggle>
     </div>
     <div class="neck-scroll">
-      <div
-      class="neck"
-      role="group"
-      :aria-label="label"
-    >
+      <div class="neck" role="group" :aria-label="label">
         <div class="neck-row" aria-hidden="true">
           <span class="neck-gutter">fret</span>
           <div class="neck-lane" :style="laneStyle">
@@ -91,7 +102,7 @@ const caption = computed(() => {
           </div>
         </div>
         <div
-          v-for="string in DIAGRAM_STRINGS"
+          v-for="string in strings"
           :key="string.id"
           class="neck-row"
           :style="{ '--gauge': `${string.gauge}px` }"
@@ -105,31 +116,20 @@ const caption = computed(() => {
               :style="laneStyle"
             >
               <ToolbarButton
-                v-for="fret in FRET_NUMBERS"
-                :key="fret"
+                v-for="fret in string.frets"
+                :key="fret.fret"
                 class="neck-cell"
-                :data-nut="fret === 0 || undefined"
-                :data-role="role(string.id, fret)"
-                :data-live="
-                  spotLive(spotAt(string.id, fret), sounding, root, target) ||
-                  undefined
-                "
-                :data-touched="
-                  sameSpot(touched, spotAt(string.id, fret)) || undefined
-                "
-                :aria-label="
-                  spotAria(spotAt(string.id, fret), role(string.id, fret))
-                "
-                @click="emit('pick', spotAt(string.id, fret))"
+                :data-nut="fret.fret === 0 || undefined"
+                :data-role="fret.mark"
+                :data-live="fret.live || undefined"
+                :data-touched="fret.touched || undefined"
+                :aria-label="fret.label"
+                @click="emit('pick', fret.spot)"
               >
                 <span class="neck-spot">
                   <template v-if="showNotes">
-                    <span class="neck-name">{{
-                      noteName(spotAt(string.id, fret).midi)
-                    }}</span>
-                    <span class="neck-oct">{{
-                      octaveOf(spotAt(string.id, fret).midi)
-                    }}</span>
+                    <span class="neck-name">{{ fret.name }}</span>
+                    <span class="neck-oct">{{ fret.octave }}</span>
                   </template>
                 </span>
               </ToolbarButton>
