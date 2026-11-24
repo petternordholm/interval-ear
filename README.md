@@ -1,6 +1,6 @@
 # Interval ear
 
-A small practice room for hearing intervals. The app plays a root and shows its name, for example **C**. It then plays a second note. You find that note on the keyboard. A fifth above C is **G**.
+A small practice room for hearing intervals. The app plays a root and shows its name, for example **E2**. It then plays a second note. You find that note on a bass neck, by string and fret. A fifth above E2 is **B2**.
 
 The drill starts with fourths and fifths, going up. Settings can switch to seconds, easy intervals, wider leaps, or every interval from a minor second through the octave, and the second note can sit above the root, below it, or either way.
 

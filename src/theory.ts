@@ -1,8 +1,3 @@
-export const KEYBOARD_LOW = 48;
-export const KEYBOARD_HIGH = 84;
-export const ROOT_LOW = 60;
-export const ROOT_HIGH = 71;
-
 const NAMES = [
   "C",
   "C♯",
@@ -17,7 +12,6 @@ const NAMES = [
   "A♯",
   "B",
 ] as const;
-const BLACK = new Set([1, 3, 6, 8, 10]);
 
 export interface Interval {
   semitones: number;
@@ -57,14 +51,6 @@ export interface Question {
   target: number;
   semitones: number;
   direction: Direction;
-}
-
-export interface PianoKey {
-  midi: number;
-  name: string;
-  octave: number;
-  black: boolean;
-  style: { left: string; width: string };
 }
 
 export function pitchClass(midi: number): number {
@@ -142,67 +128,6 @@ export function relation(question: Question): string {
   const name = intervalBySemitones(question.semitones)?.name ?? "interval";
   const way = question.direction === "up" ? "above" : "below";
   return `a ${name} ${way} ${noteLabel(question.root)}`;
-}
-
-export function createQuestion(
-  intervals: readonly number[],
-  directionChoice: DirectionChoice,
-  random: () => number = Math.random,
-  avoid: Question | null = null,
-): Question | null {
-  const pool = [
-    ...new Set(intervals.filter((semitone) => semitone >= 1 && semitone <= 12)),
-  ];
-  if (pool.length === 0) return null;
-
-  let last: Question | null = null;
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const semitones = pool[Math.floor(random() * pool.length)] ?? pool[0]!;
-    const direction: Direction =
-      directionChoice === "either"
-        ? random() < 0.5
-          ? "up"
-          : "down"
-        : directionChoice;
-    const root = ROOT_LOW + Math.floor(random() * (ROOT_HIGH - ROOT_LOW + 1));
-    const target = direction === "up" ? root + semitones : root - semitones;
-    const question = { root, target, semitones, direction };
-    last = question;
-    if (target < KEYBOARD_LOW || target > KEYBOARD_HIGH) continue;
-    if (avoid && avoid.root === root && avoid.target === target) continue;
-    return question;
-  }
-  return last;
-}
-
-export function pianoKeys(
-  low = KEYBOARD_LOW,
-  high = KEYBOARD_HIGH,
-): PianoKey[] {
-  const midis: number[] = [];
-  for (let midi = low; midi <= high; midi += 1) midis.push(midi);
-  const whites = midis.filter((midi) => !BLACK.has(pitchClass(midi)));
-  const whiteCount = whites.length;
-
-  return midis.map((midi) => {
-    const black = BLACK.has(pitchClass(midi));
-    const whitesBefore = whites.filter((white) => white < midi).length;
-    return {
-      midi,
-      name: noteName(midi),
-      octave: octaveOf(midi),
-      black,
-      style: black
-        ? {
-            left: `${(whitesBefore / whiteCount) * 100}%`,
-            width: `${(0.58 / whiteCount) * 100}%`,
-          }
-        : {
-            left: `${(whitesBefore / whiteCount) * 100}%`,
-            width: `${(1 / whiteCount) * 100}%`,
-          },
-    };
-  });
 }
 
 export function resultText(
