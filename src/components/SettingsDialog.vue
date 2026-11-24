@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Settings, X } from '@lucide/vue'
+import { Settings, X } from "@lucide/vue";
 import {
   Dialog,
   DialogBackdrop,
@@ -8,13 +8,13 @@ import {
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from '@ui-sdk/vue/dialog'
-import { Field, FieldDescription, FieldLabel } from '@ui-sdk/vue/field'
+} from "@ui-sdk/vue/dialog";
+import { Field, FieldDescription, FieldLabel } from "@ui-sdk/vue/field";
 import {
   SegmentedControl,
   SegmentedControlIndicator,
   SegmentedControlItem,
-} from '@ui-sdk/vue/segmented-control'
+} from "@ui-sdk/vue/segmented-control";
 import {
   Slider,
   SliderControl,
@@ -22,11 +22,11 @@ import {
   SliderThumb,
   SliderTrack,
   SliderValue,
-} from '@ui-sdk/vue/slider'
-import { Toggle, ToggleGroup } from '@ui-sdk/vue/toggle'
-import { Button } from '@ui-sdk/vue/button'
-import { computed } from 'vue'
-import type { Settings as PracticeSettings } from '../storage'
+} from "@ui-sdk/vue/slider";
+import { Toggle, ToggleGroup } from "@ui-sdk/vue/toggle";
+import { Button } from "@ui-sdk/vue/button";
+import { computed } from "vue";
+import type { Settings as PracticeSettings } from "../storage";
 import {
   INTERVALS,
   PRESETS,
@@ -34,58 +34,60 @@ import {
   presetFor,
   presetTitle,
   type PresetId,
-} from '../theory'
+} from "../theory";
 
-const settings = defineModel<PracticeSettings>({ required: true })
+const settings = defineModel<PracticeSettings>({ required: true });
 
 defineEmits<{
-  resetScore: []
-}>()
+  resetScore: [];
+}>();
 
 const preset = computed({
   get: (): PresetId => presetFor(settings.value.intervals),
   set: (id: PresetId | null) => {
-    if (!id || id === 'custom' || !(id in PRESETS)) return
-    settings.value.intervals = [...PRESETS[id]]
+    if (!id || id === "custom" || !(id in PRESETS)) return;
+    settings.value.intervals = [...PRESETS[id]];
   },
-})
+});
 
 const intervals = computed({
   get: () => settings.value.intervals.map(String),
   set: (next: string[]) => {
-    if (next.length === 0) return
-    settings.value.intervals = next.map(Number).sort((left, right) => left - right)
+    if (next.length === 0) return;
+    settings.value.intervals = next
+      .map(Number)
+      .sort((left, right) => left - right);
   },
-})
+});
 
 const gap = computed({
   get: () => settings.value.gap,
   set: (value: number) => {
-    settings.value.gap = value
+    settings.value.gap = value;
   },
-})
+});
 
 const volume = computed({
   get: () => settings.value.volume,
   set: (value: number) => {
-    settings.value.volume = value
+    settings.value.volume = value;
   },
-})
+});
 
 const presets: { id: PresetId; label: string }[] = [
-  { id: 'fifths', label: '4ths & 5ths' },
-  { id: 'easy', label: 'Easy' },
-  { id: 'steps', label: 'Steps' },
-  { id: 'wide', label: 'Wide' },
-  { id: 'all', label: 'All' },
-  { id: 'custom', label: 'Custom' },
-]
+  { id: "fifths", label: "4ths & 5ths" },
+  { id: "easy", label: "Easy" },
+  { id: "steps", label: "Steps" },
+  { id: "wide", label: "Wide" },
+  { id: "all", label: "All" },
+  { id: "custom", label: "Custom" },
+];
 
 function keepOne(next: string[], details: { cancel: () => void }) {
-  if (next.length === 0) details.cancel()
+  if (next.length === 0) details.cancel();
 }
 
-const gapLabel = (seconds: number) => `${seconds.toFixed(1)} s`
+const gapLabel = (seconds: number) => `${seconds.toFixed(1)} s`;
 </script>
 
 <template>
@@ -113,12 +115,18 @@ const gapLabel = (seconds: number) => `${seconds.toFixed(1)} s`
         <div class="scroller">
           <SegmentedControl v-model:value="preset" aria-label="Drill">
             <SegmentedControlIndicator />
-            <SegmentedControlItem v-for="item in presets" :key="item.id" :value="item.id">
+            <SegmentedControlItem
+              v-for="item in presets"
+              :key="item.id"
+              :value="item.id"
+            >
               {{ item.label }}
             </SegmentedControlItem>
           </SegmentedControl>
         </div>
-        <FieldDescription>{{ describeIntervals(settings.intervals) }}</FieldDescription>
+        <FieldDescription>{{
+          describeIntervals(settings.intervals)
+        }}</FieldDescription>
       </Field>
 
       <Field>
@@ -139,11 +147,20 @@ const gapLabel = (seconds: number) => `${seconds.toFixed(1)} s`
             {{ interval.short }}
           </Toggle>
         </ToggleGroup>
-        <FieldDescription>At least one interval stays on. A fifth above C is G.</FieldDescription>
+        <FieldDescription
+          >At least one interval stays on. A fifth above C is
+          G.</FieldDescription
+        >
       </Field>
 
       <Field>
-        <Slider v-model:value="gap" :min="0.2" :max="1.5" :step="0.1" :format="gapLabel">
+        <Slider
+          v-model:value="gap"
+          :min="0.2"
+          :max="1.5"
+          :step="0.1"
+          :format="gapLabel"
+        >
           <div class="row">
             <FieldLabel>Gap between the notes</FieldLabel>
             <SliderValue />

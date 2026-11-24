@@ -1,6 +1,6 @@
 @layer ui-sdk;
 
-@import '@ui-sdk/core/web.css' layer(components);
+@import "@ui-sdk/core/web.css" layer(components);
 
 :root {
   color-scheme: light;
@@ -18,7 +18,7 @@
   --ui-overlay: oklch(0.16 0.02 50 / 0.62);
   --ui-radius: 0.75rem;
   --ui-font-size: 0.95rem;
-  --ui-font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --ui-font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --ui-shadow: 0 16px 40px rgb(28 22 18 / 0.18);
   --stage: #14110e;
   --paper: #fffaf3;
@@ -35,7 +35,9 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% -10%, #4a2a22 0%, transparent 42%), var(--stage);
+  background:
+    radial-gradient(ellipse at 50% -10%, #4a2a22 0%, transparent 42%),
+    var(--stage);
   color: #f6efe4;
   font-family: var(--ui-font-sans);
   font-size: 1rem;
@@ -191,7 +193,7 @@ h1 {
   width: 100%;
 }
 
-.transport [data-slot='toolbar-button'] {
+.transport [data-slot="toolbar-button"] {
   flex: 1;
   height: 2.6rem;
 }
@@ -219,7 +221,7 @@ h1 {
   background: #1a1410;
 }
 
-.piano [data-slot='toolbar-button'] {
+.piano [data-slot="toolbar-button"] {
   position: absolute;
   top: 0;
   display: flex;
@@ -237,7 +239,7 @@ h1 {
   cursor: pointer;
 }
 
-.piano [data-accidental='white'] {
+.piano [data-accidental="white"] {
   z-index: 1;
   height: 100%;
   background: #fffaf3;
@@ -245,7 +247,7 @@ h1 {
   box-shadow: inset -1px 0 0 #e4d9c8;
 }
 
-.piano [data-accidental='black'] {
+.piano [data-accidental="black"] {
   z-index: 2;
   height: 62%;
   justify-content: flex-start;
@@ -259,11 +261,11 @@ h1 {
   transform: translateX(-50%);
 }
 
-.piano [data-accidental='white']:hover {
+.piano [data-accidental="white"]:hover {
   background: #fff;
 }
 
-.piano [data-accidental='black']:hover {
+.piano [data-accidental="black"]:hover {
   background: #3a312b;
 }
 
@@ -273,41 +275,41 @@ h1 {
     inset -1px 0 0 #e4d9c8;
 }
 
-.piano [data-accidental='black'][data-root] {
+.piano [data-accidental="black"][data-root] {
   box-shadow:
     inset 0 -0.4rem 0 var(--ember),
     1px 2px 0 #000;
 }
 
-.piano[data-sounding='root'] [data-root] {
+.piano[data-sounding="root"] [data-root] {
   background: #ffe1d2;
 }
 
-.piano[data-sounding='root'] [data-accidental='black'][data-root] {
+.piano[data-sounding="root"] [data-accidental="black"][data-root] {
   background: #a33b1c;
 }
 
-.piano [data-outcome='correct'] {
+.piano [data-outcome="correct"] {
   background: #d7f0e2;
   box-shadow: inset 0 -0.45rem 0 var(--moss);
 }
 
-.piano [data-outcome='wrong'] {
+.piano [data-outcome="wrong"] {
   background: #f8d9d4;
   box-shadow: inset 0 -0.45rem 0 var(--clay);
 }
 
-.piano [data-accidental='black'][data-outcome='correct'] {
+.piano [data-accidental="black"][data-outcome="correct"] {
   background: var(--moss);
   color: #f4fff8;
 }
 
-.piano [data-accidental='black'][data-outcome='wrong'] {
+.piano [data-accidental="black"][data-outcome="wrong"] {
   background: var(--clay);
   color: #fff6f4;
 }
 
-.piano [data-slot='toolbar-button']:focus-visible {
+.piano [data-slot="toolbar-button"]:focus-visible {
   outline: 2px solid var(--ember);
   outline-offset: -3px;
   z-index: 3;
@@ -324,11 +326,11 @@ h1 {
   opacity: 0.72;
 }
 
-.piano [data-accidental='black'] .key-name {
+.piano [data-accidental="black"] .key-name {
   font-size: 0.72rem;
 }
 
-.piano [data-accidental='black'] .key-octave {
+.piano [data-accidental="black"] .key-octave {
   font-size: 0.62rem;
 }
 
@@ -359,11 +361,11 @@ h1 {
   font-weight: 600;
 }
 
-.verdict[data-correct='true'] p {
+.verdict[data-correct="true"] p {
   color: var(--moss);
 }
 
-.verdict[data-correct='false'] p {
+.verdict[data-correct="false"] p {
   color: var(--clay);
 }
 
@@ -396,24 +398,24 @@ h1 {
   padding: 0;
 }
 
-.intervals [data-slot='toggle'] {
+.intervals [data-slot="toggle"] {
   height: 2rem;
   margin: 0;
   border-radius: 999px;
 }
 
-.intervals [data-slot='toggle'][data-pressed] {
+.intervals [data-slot="toggle"][data-pressed] {
   border-color: var(--ink);
   background: var(--ink);
   color: var(--paper);
 }
 
-.ear [data-slot='dialog-content'] {
+.ear [data-slot="dialog-content"] {
   width: min(40rem, calc(100% - 2rem));
   gap: 1rem;
 }
 
-.ear [data-slot='dialog-title'] {
+.ear [data-slot="dialog-title"] {
   font-family: Fraunces, Georgia, serif;
   font-size: 1.6rem;
 }

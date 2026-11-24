@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { AudioLines, Play } from '@lucide/vue'
-import { Button } from '@ui-sdk/vue/button'
+import { AudioLines, Play } from "@lucide/vue";
+import { Button } from "@ui-sdk/vue/button";
 import {
   SegmentedControl,
   SegmentedControlIndicator,
   SegmentedControlItem,
-} from '@ui-sdk/vue/segmented-control'
-import { Toolbar, ToolbarButton, ToolbarSeparator } from '@ui-sdk/vue/toolbar'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { audioContext, canPlay, scheduleNote, stopNotes } from './audio'
-import Piano from './components/Piano.vue'
-import SettingsDialog from './components/SettingsDialog.vue'
+} from "@ui-sdk/vue/segmented-control";
+import { Toolbar, ToolbarButton, ToolbarSeparator } from "@ui-sdk/vue/toolbar";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { audioContext, canPlay, scheduleNote, stopNotes } from "./audio";
+import Piano from "./components/Piano.vue";
+import SettingsDialog from "./components/SettingsDialog.vue";
 import {
   emptyStats,
   loadSettings,
@@ -19,7 +19,7 @@ import {
   saveStats,
   type Settings,
   type Stats,
-} from './storage'
+} from "./storage";
 import {
   createQuestion,
   noteLabel,
@@ -31,146 +31,168 @@ import {
   resultText,
   type DirectionChoice,
   type Question,
-} from './theory'
+} from "./theory";
 
-const settings = ref<Settings>(loadSettings())
-const stats = ref<Stats>(loadStats())
-const question = ref<Question | null>(null)
-const choice = ref<number | null>(null)
-const phase = ref<'ready' | 'guess' | 'revealed'>('ready')
-const sounding = ref<'root' | 'other' | null>(null)
-const status = ref('')
-const audioError = ref('')
-const timers: number[] = []
+const settings = ref<Settings>(loadSettings());
+const stats = ref<Stats>(loadStats());
+const question = ref<Question | null>(null);
+const choice = ref<number | null>(null);
+const phase = ref<"ready" | "guess" | "revealed">("ready");
+const sounding = ref<"root" | "other" | null>(null);
+const status = ref("");
+const audioError = ref("");
+const timers: number[] = [];
 
-watch(settings, (value) => saveSettings(value), { deep: true })
-watch(stats, (value) => saveStats(value), { deep: true })
+watch(settings, (value) => saveSettings(value), { deep: true });
+watch(stats, (value) => saveStats(value), { deep: true });
 
 const direction = computed({
   get: () => settings.value.direction,
   set: (value: DirectionChoice | null) => {
-    if (value) settings.value.direction = value
+    if (value) settings.value.direction = value;
   },
-})
+});
 
-const drill = computed(() => presetTitle(presetFor(settings.value.intervals)))
+const drill = computed(() => presetTitle(presetFor(settings.value.intervals)));
 
 const prompt = computed(() => {
-  if (!question.value) return 'a fifth above · example'
-  const label = noteLabel(question.value.root)
-  if (settings.value.direction === 'either') return `Above or below ${label}`
-  return question.value.direction === 'up' ? `Above ${label}` : `Below ${label}`
-})
+  if (!question.value) return "a fifth above · example";
+  const label = noteLabel(question.value.root);
+  if (settings.value.direction === "either") return `Above or below ${label}`;
+  return question.value.direction === "up"
+    ? `Above ${label}`
+    : `Below ${label}`;
+});
 
-const rootPitch = computed(() => (question.value ? noteName(question.value.root) : 'C'))
-const rootMeta = computed(() => (question.value ? noteLabel(question.value.root) : 'C4 · example'))
+const rootPitch = computed(() =>
+  question.value ? noteName(question.value.root) : "C",
+);
+const rootMeta = computed(() =>
+  question.value ? noteLabel(question.value.root) : "C4 · example",
+);
 const otherPitch = computed(() => {
-  if (!question.value || phase.value !== 'revealed') return question.value ? '?' : 'G'
-  return noteName(question.value.target)
-})
+  if (!question.value || phase.value !== "revealed")
+    return question.value ? "?" : "G";
+  return noteName(question.value.target);
+});
 const otherMeta = computed(() => {
-  if (!question.value) return 'a fifth above · example'
-  if (phase.value !== 'revealed') return prompt.value
-  return relation(question.value)
-})
+  if (!question.value) return "a fifth above · example";
+  if (phase.value !== "revealed") return prompt.value;
+  return relation(question.value);
+});
 
 const verdict = computed(() => {
-  if (!question.value || choice.value === null || phase.value !== 'revealed') return null
-  return resultText(question.value, choice.value)
-})
+  if (!question.value || choice.value === null || phase.value !== "revealed")
+    return null;
+  return resultText(question.value, choice.value);
+});
 
 const scoreLine = computed(() => {
-  if (stats.value.heard === 0) return 'No notes yet'
-  const percent = Math.round((stats.value.correct / stats.value.heard) * 100)
-  return `${stats.value.streak} streak · ${stats.value.correct}/${stats.value.heard} · ${percent}%`
-})
+  if (stats.value.heard === 0) return "No notes yet";
+  const percent = Math.round((stats.value.correct / stats.value.heard) * 100);
+  return `${stats.value.streak} streak · ${stats.value.correct}/${stats.value.heard} · ${percent}%`;
+});
 
 const pianoLabel = computed(() => {
-  if (!question.value) return 'Answer keyboard. Play the first note before choosing a key.'
-  if (phase.value === 'revealed')
-    return 'Answer keyboard. The correct key is marked. Click a key to hear it.'
-  return 'Answer keyboard. Choose the note you heard.'
-})
+  if (!question.value)
+    return "Answer keyboard. Play the first note before choosing a key.";
+  if (phase.value === "revealed")
+    return "Answer keyboard. The correct key is marked. Click a key to hear it.";
+  return "Answer keyboard. Choose the note you heard.";
+});
 
 function clearTimers() {
   while (timers.length > 0) {
-    const id = timers.pop()
-    if (id !== undefined) window.clearTimeout(id)
+    const id = timers.pop();
+    if (id !== undefined) window.clearTimeout(id);
   }
 }
 
-function play(kind: 'root' | 'target' | 'both') {
-  const current = question.value
-  if (!current) return
+function play(kind: "root" | "target" | "both") {
+  const current = question.value;
+  if (!current) return;
   if (!canPlay()) {
-    audioError.value = 'This browser cannot play sound.'
-    return
+    audioError.value = "This browser cannot play sound.";
+    return;
   }
-  stopNotes()
-  clearTimers()
-  const ctx = audioContext()
-  const start = ctx.currentTime + 0.05
-  const duration = 0.95
-  const gap = settings.value.gap
-  const volume = settings.value.volume
-  const named = phase.value === 'revealed'
+  stopNotes();
+  clearTimers();
+  const ctx = audioContext();
+  const start = ctx.currentTime + 0.05;
+  const duration = 0.95;
+  const gap = settings.value.gap;
+  const volume = settings.value.volume;
+  const named = phase.value === "revealed";
 
-  if (kind === 'root' || kind === 'both') scheduleNote(current.root, start, duration, volume)
-  if (kind === 'target') scheduleNote(current.target, start, duration, volume)
-  if (kind === 'both') scheduleNote(current.target, start + duration + gap, duration, volume)
+  if (kind === "root" || kind === "both")
+    scheduleNote(current.root, start, duration, volume);
+  if (kind === "target") scheduleNote(current.target, start, duration, volume);
+  if (kind === "both")
+    scheduleNote(current.target, start + duration + gap, duration, volume);
 
-  sounding.value = kind === 'target' ? 'other' : 'root'
-  if (kind === 'both') {
+  sounding.value = kind === "target" ? "other" : "root";
+  if (kind === "both") {
     timers.push(
       window.setTimeout(
         () => {
-          sounding.value = 'other'
+          sounding.value = "other";
         },
         (duration + gap) * 1000,
       ),
-    )
+    );
   }
   timers.push(
     window.setTimeout(
       () => {
-        sounding.value = null
+        sounding.value = null;
       },
-      ((kind === 'both' ? duration + gap + duration : duration) + 0.05) * 1000,
+      ((kind === "both" ? duration + gap + duration : duration) + 0.05) * 1000,
     ),
-  )
+  );
 
-  if (kind === 'root') status.value = `Playing the root, ${noteSpoken(current.root)}`
-  else if (kind === 'target') {
-    status.value = named ? `Playing ${noteSpoken(current.target)}` : 'Playing the other note'
+  if (kind === "root")
+    status.value = `Playing the root, ${noteSpoken(current.root)}`;
+  else if (kind === "target") {
+    status.value = named
+      ? `Playing ${noteSpoken(current.target)}`
+      : "Playing the other note";
   } else {
     status.value = named
       ? `Playing ${noteSpoken(current.root)}, then ${noteSpoken(current.target)}`
-      : `Playing the root, ${noteSpoken(current.root)}, then the other note`
+      : `Playing the root, ${noteSpoken(current.root)}, then the other note`;
   }
 }
 
 function hearKey(midi: number) {
   if (!canPlay()) {
-    audioError.value = 'This browser cannot play sound.'
-    return
+    audioError.value = "This browser cannot play sound.";
+    return;
   }
-  stopNotes()
-  clearTimers()
-  sounding.value = null
-  scheduleNote(midi, audioContext().currentTime + 0.04, 0.8, settings.value.volume)
-  status.value = `Playing ${noteSpoken(midi)}`
+  stopNotes();
+  clearTimers();
+  sounding.value = null;
+  scheduleNote(
+    midi,
+    audioContext().currentTime + 0.04,
+    0.8,
+    settings.value.volume,
+  );
+  status.value = `Playing ${noteSpoken(midi)}`;
 }
 
 function begin() {
-  const next = createQuestion(settings.value.intervals, settings.value.direction)
+  const next = createQuestion(
+    settings.value.intervals,
+    settings.value.direction,
+  );
   if (!next) {
-    status.value = 'Turn on at least one interval in settings.'
-    return
+    status.value = "Turn on at least one interval in settings.";
+    return;
   }
-  question.value = next
-  choice.value = null
-  phase.value = 'guess'
-  play('both')
+  question.value = next;
+  choice.value = null;
+  phase.value = "guess";
+  play("both");
 }
 
 function nextRound() {
@@ -179,58 +201,63 @@ function nextRound() {
     settings.value.direction,
     Math.random,
     question.value,
-  )
+  );
   if (!next) {
-    status.value = 'Turn on at least one interval in settings.'
-    return
+    status.value = "Turn on at least one interval in settings.";
+    return;
   }
-  question.value = next
-  choice.value = null
-  phase.value = 'guess'
-  play('both')
+  question.value = next;
+  choice.value = null;
+  phase.value = "guess";
+  play("both");
 }
 
 function onPick(midi: number) {
-  const current = question.value
-  if (!current) return
-  if (phase.value === 'revealed') {
-    hearKey(midi)
-    return
+  const current = question.value;
+  if (!current) return;
+  if (phase.value === "revealed") {
+    hearKey(midi);
+    return;
   }
-  if (phase.value !== 'guess') return
+  if (phase.value !== "guess") return;
 
-  choice.value = midi
-  phase.value = 'revealed'
-  const correct = midi === current.target
+  choice.value = midi;
+  phase.value = "revealed";
+  const correct = midi === current.target;
   stats.value = {
     heard: stats.value.heard + 1,
     correct: stats.value.correct + (correct ? 1 : 0),
     streak: correct ? stats.value.streak + 1 : 0,
-    best: correct ? Math.max(stats.value.best, stats.value.streak + 1) : stats.value.best,
-  }
-  timers.push(window.setTimeout(() => play('both'), 280))
+    best: correct
+      ? Math.max(stats.value.best, stats.value.streak + 1)
+      : stats.value.best,
+  };
+  timers.push(window.setTimeout(() => play("both"), 280));
 }
 
 function resetScore() {
-  stats.value = emptyStats()
+  stats.value = emptyStats();
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.code !== 'Space' || event.repeat) return
-  const target = event.target
-  if (!(target instanceof HTMLElement)) return
-  if (target.closest('button, input, textarea, [role="dialog"], [role="slider"]')) return
-  if (!question.value) return
-  event.preventDefault()
-  play('both')
+  if (event.code !== "Space" || event.repeat) return;
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  if (
+    target.closest('button, input, textarea, [role="dialog"], [role="slider"]')
+  )
+    return;
+  if (!question.value) return;
+  event.preventDefault();
+  play("both");
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
+onMounted(() => window.addEventListener("keydown", onKeydown));
 onUnmounted(() => {
-  window.removeEventListener('keydown', onKeydown)
-  clearTimers()
-  stopNotes()
-})
+  window.removeEventListener("keydown", onKeydown);
+  clearTimers();
+  stopNotes();
+});
 </script>
 
 <template>
@@ -259,8 +286,8 @@ onUnmounted(() => {
 
     <section class="card">
       <p v-if="!question" class="intro">
-        You see the root, for example C. A second note then plays on its own. Find it on the
-        keyboard. A fifth above C is G.
+        You see the root, for example C. A second note then plays on its own.
+        Find it on the keyboard. A fifth above C is G.
       </p>
 
       <div class="score">
@@ -299,7 +326,9 @@ onUnmounted(() => {
       </div>
 
       <div v-else class="ready-actions">
-        <Button class="start" data-variant="solid" @click="begin">Play the first note</Button>
+        <Button class="start" data-variant="solid" @click="begin"
+          >Play the first note</Button
+        >
       </div>
 
       <div class="keyboard-scroll">

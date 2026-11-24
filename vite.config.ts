@@ -1,26 +1,26 @@
-import { fileURLToPath, URL } from 'node:url'
-import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vitest/config'
+import { fileURLToPath, URL } from "node:url";
+import vue from "@vitejs/plugin-vue";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  base: '/interval-ear/',
+  base: "/interval-ear/",
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
   server: {
-    host: '127.0.0.1',
+    host: "127.0.0.1",
     port: 4721,
     strictPort: true,
   },
   preview: {
-    host: '127.0.0.1',
+    host: "127.0.0.1",
     port: 4721,
     strictPort: true,
   },
   test: {
-    environment: 'node',
+    environment: "node",
   },
-})
+});
