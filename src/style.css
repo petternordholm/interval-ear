@@ -346,11 +346,10 @@ h1 {
   margin-top: 0.06rem;
   font-size: 0.58rem;
   line-height: 1;
-  opacity: 0.7;
 }
 
 .neck-cell[data-role="root"] .neck-spot {
-  background: var(--ember);
+  background: #b8431f;
   color: #fff7f3;
 }
 

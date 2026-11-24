@@ -15,7 +15,7 @@ export const STRINGS = [
   { id: "G", open: 43, gauge: 2 },
 ] as const;
 
-/** High string on top, the usual diagram orientation. */
+// High string on top, the usual diagram orientation.
 export const DIAGRAM_STRINGS = [...STRINGS].reverse();
 
 export const FRET_NUMBERS = Array.from(

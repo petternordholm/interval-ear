@@ -246,17 +246,16 @@ function onPick(midi: number) {
 
 function onPickPosition(spot: FretPosition) {
   touched.value = spot;
+  const played = `Playing ${noteSpoken(spot.midi)}, ${placeLabel(spot)}`;
   if (!question.value || phase.value === "ready") {
     hearKey(spot.midi);
-    status.value = `Playing ${noteSpoken(spot.midi)}, ${placeLabel(spot)}`;
+    status.value = played;
     return;
   }
-  const heardOnly = phase.value === "revealed";
+  const replaying = phase.value === "revealed";
   if (phase.value === "guess") answerAt.value = spot;
   onPick(spot.midi);
-  if (heardOnly) {
-    status.value = `Playing ${noteSpoken(spot.midi)}, ${placeLabel(spot)}`;
-  }
+  if (replaying) status.value = played;
 }
 
 function resetScore() {
